@@ -141,7 +141,7 @@ class ReadyQueue {
     // TODO Feature 1: declare the lock protecting `list` and `map` here
 private final ReentrantLock lock = new ReentrantLock();
     // TODO Feature 3: declare the counting semaphore that counts the processes waiting in the ready queue here
-
+private final Semaphore semaphore = new Semaphore(0);
     // Add a process to the ready queue (new process, or a process that did not finish its quantum)
     public void add(Process process) {
         lock.lock();
@@ -151,7 +151,7 @@ private final ReentrantLock lock = new ReentrantLock();
         map.put(thread, process);
 
         // TODO Feature 3: signal that one more process is available in the queue
-
+semaphore.release();
         System.out.println(Colors.BLUE + "  ➕ " + Colors.BOLD + Colors.CYAN + process.getName() + Colors.RESET +
                 Colors.BLUE + " (Priority: " + process.getPriority() + ") added to ready queue" + Colors.RESET +
                 " │ Remaining: " + Colors.YELLOW + process.getRemainingTime() + "ms" + Colors.RESET +
@@ -164,6 +164,11 @@ private final ReentrantLock lock = new ReentrantLock();
 
     // Remove and return the thread at the head of the queue (or null if the queue is empty)
     public Thread poll() {
+        try {
+            semaphore.acquire();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
         lock.lock();
         try;
         // TODO Feature 1: protect this critical section
